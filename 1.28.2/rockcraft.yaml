@@ -1,0 +1,75 @@
+name: envoy
+base: bare
+build-base: ubuntu@22.04
+license: Apache-2.0
+
+version: '1.28.2'
+summary: Envoy is an open source edge and service proxy.
+description: |
+  Envoy is an open source edge and service proxy, designed for cloud-native applications.
+platforms:
+  amd64:
+  arm64:
+
+services:
+  envoy:
+    override: replace
+    summary: "envoy service"
+    startup: enabled
+    command: "envoy [ -c /etc/envoy/envoy.yaml ]"
+    on-failure: shutdown
+
+entrypoint-service: envoy
+
+parts:
+  envoy:
+    plugin: nil
+    source: https://github.com/envoyproxy/envoy.git
+    source-type: git
+    source-tag: v1.28.2
+    source-depth: 1
+    build-packages:
+      #https://github.com/envoyproxy/envoy/blob/v1.28.2/bazel/README.md#ubuntu
+      - wget
+      - autoconf
+      - curl
+      - libtool
+      - patch
+      - python3-pip
+      - unzip
+      - virtualenv
+
+      - libstdc++-12-dev
+
+      - libtinfo5 #requried for bazel/setup_clang.sh
+      - automake
+    override-build: |
+      # install balzel
+      wget -O /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-$([ $(uname -m) = "aarch64" ] && echo "arm64" || echo "amd64")
+      chmod +x /usr/local/bin/bazel
+  
+      # setup required libs
+      wget https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+      tar -xf clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+      bazel/setup_clang.sh clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04    
+      export LLVM_ROOT=$PWD/clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04
+      export PATH=${LLVM_ROOT}/bin:${PATH}
+      
+      # https://github.com/bazelbuild/rules_python/issues/1169
+      sed -i 's/ignore_root_user_error = False/ignore_root_user_error = True/' bazel/repositories_extra.bzl
+      
+      
+      # https://github.com/envoyproxy/envoy/issues/23797
+      sed -i 's/build:linux --fission=dbg,opt/#build:linux --fission=dbg,opt/' .bazelrc
+      sed -i 's/build:linux --features=per_object_debug_info/#build:linux --features=per_object_debug_info/' .bazelrc
+      echo "build:linux --cxxopt=-Wno-error=thread-safety-reference-return" >> .bazelrc #todo check if works
+
+      export ENVOY_DOCKER_BUILD_DIR=./build  # todo check if is needed
+      export BAZEL_BUILD_OPTIONS=--strip=always
+
+      ./ci/do_ci.sh bazel.sizeopt.server_only
+      
+      #copy required files      
+      mkdir -p ${CRAFT_PART_INSTALL}/bin/ ${CRAFT_PART_INSTALL}/etc/envoy/
+      cp linux/amd64/build_envoy_sizeopt_stripped/envoy ${CRAFT_PART_INSTALL}/bin/envoy
+      cp configs/envoyproxy_io_proxy.yaml ${CRAFT_PART_INSTALL}/etc/envoy/envoy.yaml
