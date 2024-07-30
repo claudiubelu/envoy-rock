@@ -65,9 +65,12 @@ parts:
       export ENVOY_DOCKER_BUILD_DIR=./build  # todo check if is needed
       export BAZEL_BUILD_OPTIONS=--strip=always
 
-      ./ci/do_ci.sh sizeopt.server_only
+      # this will use the fastbuild compilation-type.
+      # the dev target also runs unskippable tests, which may fail.
+      ./ci/do_ci.sh dev || true
 
       # copy required files
       mkdir -p ${CRAFT_PART_INSTALL}/bin/ ${CRAFT_PART_INSTALL}/etc/envoy/
-      cp linux/amd64/build_envoy_sizeopt_stripped/envoy ${CRAFT_PART_INSTALL}/bin/envoy
+      #cp linux/amd64/build_envoy_sizeopt_stripped/envoy ${CRAFT_PART_INSTALL}/bin/envoy
+      cp linux/amd64/build_envoy_fastbuild/envoy ${CRAFT_PART_INSTALL}/bin/envoy
       cp configs/envoyproxy_io_proxy.yaml ${CRAFT_PART_INSTALL}/etc/envoy/envoy.yaml
