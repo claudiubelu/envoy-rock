@@ -49,7 +49,17 @@ parts:
       chmod +x /usr/local/bin/bazel
 
       # setup required libs
-      wget -q https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+      arch="$(uname -m)"
+      if [ "${arch}" == "x86_64" ]; then
+          url="https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04.tar.xz"
+      elif [ "${arch}" == "aarch64" ]; then
+          url="https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-aarch64-linux-gnu.tar.xz"
+      else
+        echo "Invalid platform for building envoy ('${arch}'). Exiting."
+        exit 1
+      fi
+
+      wget -q "${url}"
       tar -xf clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04.tar.xz
       bazel/setup_clang.sh clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04
       export LLVM_ROOT=$PWD/clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04
