@@ -22,6 +22,11 @@ services:
 entrypoint-service: envoy
 
 parts:
+  add-base-files:
+    plugin: nil
+    stage-packages:
+      - base-files
+
   envoy:
     plugin: nil
     source: https://github.com/envoyproxy/envoy.git
