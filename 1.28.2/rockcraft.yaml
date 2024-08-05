@@ -66,6 +66,10 @@ parts:
 
       wget -q "https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/${clang_llvm}.tar.xz"
       tar -xf "./${clang_llvm}.tar.xz"
+
+      # remove the archive to release some local storage, it's around ~1GB in size.
+      rm "./${clang_llvm}.tar.xz"
+
       bazel/setup_clang.sh "${clang_llvm}"
       export LLVM_ROOT="$PWD/${clang_llvm}"
       export PATH=${LLVM_ROOT}/bin:${PATH}
