@@ -57,7 +57,7 @@ parts:
       if [ "${arch}" == "x86_64" ]; then
           clang_llvm="clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04"
       elif [ "${arch}" == "aarch64" ]; then
-          clang_llvm="clang+llvm-18.1.8-aarch64-linux-gnu.tar.xz"
+          clang_llvm="clang+llvm-18.1.8-aarch64-linux-gnu"
       else
         echo "Invalid platform for building envoy ('${arch}'). Exiting."
         exit 1
