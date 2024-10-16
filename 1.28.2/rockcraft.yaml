@@ -48,6 +48,11 @@ parts:
       - libtinfo5  # required for bazel/setup_clang.sh
       - automake
     override-build: |
+      # The checksum of quiche-envoy-integration changed, causing the envoy build to fail.
+      # https://github.com/envoyproxy/envoy/issues/36563
+      git fetch origin pull/36515/head
+      git cherry-pick FETCH_HEAD
+
       # install bazel
       wget -q -O /usr/local/bin/bazel "https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-$CRAFT_ARCH_BUILD_FOR"
       chmod +x /usr/local/bin/bazel
