@@ -9,6 +9,7 @@ description: |
   Envoy is an open source edge and service proxy, designed for cloud-native applications.
 platforms:
   amd64:
+  arm64:
 
 services:
   envoy:
@@ -47,6 +48,8 @@ parts:
 
       - libtinfo5  # required for bazel/setup_clang.sh
       - automake
+      # Required for the arm64 build.
+      - libxml2
     override-build: |
       # The checksum of quiche-envoy-integration changed, causing the envoy build to fail.
       # https://github.com/envoyproxy/envoy/issues/36563
